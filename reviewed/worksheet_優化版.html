@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>《快樂的家庭活動》作文句型牆 — Canva 線上填空與作文簿抄寫器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .input-fill {
+      border-bottom: 2px solid #3b82f6;
+      background: rgba(239, 246, 255, 0.6);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      color: #1e3a8a;
+      transition: all 0.2s ease;
+      min-width: 140px;
+      display: inline-block;
+    }
+    .input-fill:focus {
+      outline: none;
+      background: #ffffff;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+    }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; padding: 0 !important; }
+      .sheet-container { border: none !important; box-shadow: none !important; max-width: 100% !important; margin: 0 !important; }
+      .input-fill { border-bottom: 1px solid #64748b !important; background: transparent !important; }
+    }
+  </style>
+</head>
+<body class="bg-amber-50/40 text-slate-800 p-4 md:p-8">
+
+  <!-- 操作控制列 (列印與抄寫預覽) -->
+  <div class="max-w-4xl mx-auto mb-6 bg-white p-4 rounded-2xl shadow-sm border border-amber-200 flex flex-wrap items-center justify-between gap-4 no-print">
+    <div class="flex items-center gap-3">
+      <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+        <i class="fa-solid fa-pen-nib"></i> 四年級國語寫作
+      </span>
+      <span class="text-xs text-slate-500 font-medium">在各框框內打字填空，下方即時同步「作文簿抄寫格式」！</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="fillExample()" class="px-3.5 py-1.5 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> 帶入範例
+      </button>
+      <button onclick="clearAll()" class="px-3.5 py-1.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-xl text-xs font-bold transition">
+        清空
+      </button>
+      <button onclick="window.print()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+        <i class="fa-solid fa-print"></i> 列印學習單 (A4)
+      </button>
+    </div>
+  </div>
+
+  <!-- 學習單主體 (模仿 Canva 視覺排版) -->
+  <div class="max-w-4xl mx-auto bg-[#FFFDF7] rounded-3xl p-6 md:p-10 shadow-lg border-2 border-amber-200 sheet-container">
+    
+    <!-- 頂部大標題 -->
+    <div class="text-center relative pb-6 mb-8 border-b-2 border-dashed border-amber-200">
+      <div class="inline-block bg-gradient-to-r from-red-500 to-amber-500 text-white font-black text-2xl md:text-4xl px-8 py-3 rounded-full shadow-md transform -rotate-1 tracking-wider mb-2">
+        快樂的家庭活動
+      </div>
+      <div class="inline-block bg-amber-300 text-amber-950 font-black text-lg md:text-xl px-5 py-1 rounded-xl shadow-sm ml-2">
+        作文句型牆
+      </div>
+      <p class="text-amber-800 text-xs md:text-sm font-bold mt-2">
+        寫出生活中的美好回憶，讓文字充滿溫度！✏️
+      </p>
+
+      <!-- 學生姓名座號欄 -->
+      <div class="flex justify-end gap-4 text-xs font-bold text-slate-600 mt-4">
+        <span>班級：四年 <input type="text" class="w-12 border-b-2 border-slate-400 text-center bg-transparent focus:outline-none" value=""> 班</span>
+        <span>座號：<input type="text" class="w-12 border-b-2 border-slate-400 text-center bg-transparent focus:outline-none" value=""></span>
+        <span>姓名：<input type="text" class="w-24 border-b-2 border-slate-400 text-center bg-transparent focus:outline-none" value=""></span>
+      </div>
+    </div>
+
+    <!-- 網格四段卡片 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      
+      <!-- 第一段：活動開始 (綠色卡片) -->
+      <div class="bg-[#F0FDF4] border-2 border-emerald-300 rounded-2xl p-5 shadow-sm relative">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-sm">1</span>
+          <h3 class="font-black text-emerald-900 text-base">第一段 活動開始</h3>
+          <span class="text-[11px] text-emerald-600 font-bold bg-emerald-100 px-2 py-0.5 rounded-full ml-auto">起</span>
+        </div>
+        <p class="text-xs text-emerald-700 font-bold mb-3">寫一寫：什麼時候？在哪裡？和誰？做什麼？</p>
+
+        <div class="space-y-3 text-sm text-slate-800 leading-relaxed font-medium">
+          <div>• 每到 <input type="text" id="p1_time" placeholder="秋天涼爽的週末" class="input-fill w-36">，我們全家都會 <input type="text" id="p1_activity" placeholder="聚在院子裡烤肉" class="input-fill w-44">。</div>
+          <div>• 今年的 <input type="text" id="p1_holiday" placeholder="中秋連假" class="input-fill w-28">，我們決定一起 <input type="text" id="p1_plan" placeholder="舉辦盛大的家庭烤肉派對" class="input-fill w-56">。</div>
+          <div>• 那一天，我和 <input type="text" id="p1_who" placeholder="爸爸、媽媽和哥哥" class="input-fill w-36"> 一起在 <input type="text" id="p1_where" placeholder="阿公家的庭院生火做準備" class="input-fill w-48">。</div>
+          <div>• 想到可以和家人一起度過這一天，我的心情 <input type="text" id="p1_mood" placeholder="興奮得像要飛起來一樣" class="input-fill w-48">。</div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-emerald-200 flex flex-wrap items-center gap-1.5 text-[11px] text-emerald-800">
+          <span class="font-bold">✨ 好詞推薦：</span>
+          <span class="bg-emerald-100 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-200" onclick="insertWord('p1_mood', '興奮無比')">興奮無比</span>
+          <span class="bg-emerald-100 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-200" onclick="insertWord('p1_mood', '迫不及待')">迫不及待</span>
+          <span class="bg-emerald-100 px-2 py-0.5 rounded cursor-pointer hover:bg-emerald-200" onclick="insertWord('p1_mood', '歡天喜地')">歡天喜地</span>
+        </div>
+      </div>
+
+      <!-- 第二段：活動過程 (藍色卡片) -->
+      <div class="bg-[#F0F9FF] border-2 border-sky-300 rounded-2xl p-5 shadow-sm relative">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-7 h-7 rounded-full bg-sky-500 text-white flex items-center justify-center font-black text-sm">2</span>
+          <h3 class="font-black text-sky-900 text-base">第二段 活動過程</h3>
+          <span class="text-[11px] text-sky-600 font-bold bg-sky-100 px-2 py-0.5 rounded-full ml-auto">承</span>
+        </div>
+        <p class="text-xs text-sky-700 font-bold mb-3">寫一寫：大家做了什麼？看到、聽到、聞到什麼？(五感)</p>
+
+        <div class="space-y-3 text-sm text-slate-800 leading-relaxed font-medium">
+          <div>• 首先，我們先 <input type="text" id="p2_step1" placeholder="清洗新鮮的食材" class="input-fill w-36">，接著 <input type="text" id="p2_step2" placeholder="把肉片整齊排上烤架" class="input-fill w-44">。</div>
+          <div>• 爸爸負責 <input type="text" id="p2_dad" placeholder="專心控制火候" class="input-fill w-28">，媽媽則 <input type="text" id="p2_mom" placeholder="調製美味醬汁" class="input-fill w-28">，我也幫忙 <input type="text" id="p2_me" placeholder="分送烤好的玉米" class="input-fill w-32">。</div>
+          <div>• 我看見 <input type="text" id="p2_see" placeholder="紅紅的炭火劈啪跳躍" class="input-fill w-36">，還聽見 <input type="text" id="p2_hear" placeholder="肉片滋滋作響的聲音" class="input-fill w-40">。</div>
+          <div>• 一陣陣 <input type="text" id="p2_smell" placeholder="香氣四溢" class="input-fill w-24"> 的香味飄過來，讓我 <input type="text" id="p2_feel" placeholder="忍不住口水直流" class="input-fill w-36">。</div>
+          <div>• 大家一邊 <input type="text" id="p2_act1" placeholder="津津有味的品嚐" class="input-fill w-32">，一邊 <input type="text" id="p2_act2" placeholder="開心的聊天" class="input-fill w-28">，真是熱鬧！</div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-sky-200 flex flex-wrap items-center gap-1.5 text-[11px] text-sky-800">
+          <span class="font-bold">✨ 五感好詞：</span>
+          <span class="bg-sky-100 px-2 py-0.5 rounded">香氣四溢</span>
+          <span class="bg-sky-100 px-2 py-0.5 rounded">滋滋作響</span>
+          <span class="bg-sky-100 px-2 py-0.5 rounded">熱呼呼</span>
+          <span class="bg-sky-100 px-2 py-0.5 rounded">熱鬧非凡</span>
+        </div>
+      </div>
+
+      <!-- 第三段：最難忘的事 (粉橘卡片) -->
+      <div class="bg-[#FFF7ED] border-2 border-orange-300 rounded-2xl p-5 shadow-sm relative">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center font-black text-sm">3</span>
+          <h3 class="font-black text-orange-900 text-base">第三段 最難忘的事</h3>
+          <span class="text-[11px] text-orange-600 font-bold bg-orange-100 px-2 py-0.5 rounded-full ml-auto">轉</span>
+        </div>
+        <p class="text-xs text-orange-700 font-bold mb-3">寫一寫：活動中最好玩、最特別的一件事。</p>
+
+        <div class="space-y-3 text-sm text-slate-800 leading-relaxed font-medium">
+          <div>• 這次活動中，最讓我難忘的是 <input type="text" id="p3_event" placeholder="烤棉花糖的趣味小插曲" class="input-fill w-52">。</div>
+          <div>• 正當我們 <input type="text" id="p3_doing" placeholder="專心轉動竹籤" class="input-fill w-32"> 的時候，突然 <input type="text" id="p3_sudden" placeholder="哥哥的棉花糖著火變成了小火球" class="input-fill w-60">！</div>
+          <div>• 沒想到 <input type="text" id="p3_surprise" placeholder="哥哥急得手忙腳亂一直猛吹" class="input-fill w-52">，逗得大家哈哈大笑。</div>
+          <div>• 我開心得 <input type="text" id="p3_reaction" placeholder="肚子都笑痛了" class="input-fill w-32">，心裡覺得 <input type="text" id="p3_feeling" placeholder="過程實在既刺激又好笑" class="input-fill w-44">。</div>
+          <div>• 直到現在，我想起這件事還會 <input type="text" id="p3_now" placeholder="忍不住噗哧一聲笑出來" class="input-fill w-48">。</div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-orange-200 flex flex-wrap items-center gap-1.5 text-[11px] text-orange-800">
+          <span class="font-bold">✨ 好詞推薦：</span>
+          <span class="bg-orange-100 px-2 py-0.5 rounded">手忙腳亂</span>
+          <span class="bg-orange-100 px-2 py-0.5 rounded">哈哈大笑</span>
+          <span class="bg-orange-100 px-2 py-0.5 rounded">津津有味</span>
+          <span class="bg-orange-100 px-2 py-0.5 rounded">回味無窮</span>
+        </div>
+      </div>
+
+      <!-- 第四段：我的感想 (暖黃卡片) -->
+      <div class="bg-[#FEFCE8] border-2 border-amber-300 rounded-2xl p-5 shadow-sm relative">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="w-7 h-7 rounded-full bg-amber-500 text-white flex items-center justify-center font-black text-sm">4</span>
+          <h3 class="font-black text-amber-900 text-base">第四段 我的感想</h3>
+          <span class="text-[11px] text-amber-600 font-bold bg-amber-100 px-2 py-0.5 rounded-full ml-auto">合</span>
+        </div>
+        <p class="text-xs text-amber-700 font-bold mb-3">寫一寫：活動結束後，你有什麼心情或想法？</p>
+
+        <div class="space-y-3 text-sm text-slate-800 leading-relaxed font-medium">
+          <div>• 這次的家庭活動讓我深深覺得 <input type="text" id="p4_feel_main" placeholder="無比的溫暖與幸福" class="input-fill w-44">。</div>
+          <div>• 我最喜歡和家人一起 <input type="text" id="p4_with_family" placeholder="同心協力完成一件事" class="input-fill w-40">，因為 <input type="text" id="p4_why" placeholder="有家人的陪伴最安心" class="input-fill w-44">。</div>
+          <div>• 這次活動不但讓我 <input type="text" id="p4_gain1" placeholder="學會了動手分擔家務" class="input-fill w-36">，也讓我 <input type="text" id="p4_gain2" placeholder="更加珍惜和家人相處的時光" class="input-fill w-48">。</div>
+          <div>• 我發現，一家人能夠 <input type="text" id="p4_realize" placeholder="健康平安的圍坐在一起" class="input-fill w-44">，就是最幸福的事。</div>
+          <div>• 我希望下次還能和家人一起 <input type="text" id="p4_hope" placeholder="去戶外露營探索大自然" class="input-fill w-44">！</div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-amber-200">
+          <p class="text-[11px] text-amber-900 font-bold">
+            🌟 結尾金句：<span class="text-red-600 font-black">「快樂不一定要去很遠的地方，只要一家人在一起，就是最幸福的時光！」</span>
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 底部作文秘訣叮嚀 -->
+    <div class="bg-amber-100/70 rounded-2xl p-4 border border-amber-300 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-amber-900">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-lightbulb text-amber-600 text-lg"></i>
+        <span><strong>四年級寫作小秘訣：</strong>時間＋地點＋人物＋事情 ＋ 五感描寫 ＋ 心情感受 ＝ 一篇生動感人的好作文！</span>
+      </div>
+      <div class="font-bold text-amber-800">
+        家 · 是最溫暖的避風港 ❤️
+      </div>
+    </div>
+  </div>
+
+  <!-- 作文簿直接抄寫區塊 -->
+  <div class="max-w-4xl mx-auto mt-8 bg-white rounded-3xl p-6 md:p-8 shadow-md border-2 border-blue-200 no-print">
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4 mb-4">
+      <div>
+        <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-book-open text-blue-600"></i> 作文簿抄寫格式（已自動分段、開頭空兩格）
+        </h3>
+        <p class="text-xs text-slate-500 mt-1">填寫上方空格後，此處自動組合完成！學生可直接照抄至作文簿上。</p>
+      </div>
+      <button onclick="copyEssay()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+        <i class="fa-solid fa-copy"></i> 複製全文
+      </button>
+    </div>
+
+    <div id="essayOutput" class="bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm text-slate-800 leading-relaxed font-mono whitespace-pre-wrap select-all">
+    </div>
+  </div>
+
+  <script>
+    const inputs = document.querySelectorAll('input');
+    inputs.forEach(input => {
+      input.addEventListener('input', updateEssay);
+    });
+
+    function getVal(id, defaultVal) {
+      const el = document.getElementById(id);
+      return (el && el.value.trim() !== '') ? el.value.trim() : (defaultVal || '____');
+    }
+
+    function updateEssay() {
+      const p1 = `　　每到${getVal('p1_time', '秋天涼爽的週末')}，我們全家都會${getVal('p1_activity', '聚在院子裡烤肉')}。今年的${getVal('p1_holiday', '中秋連假')}，我們決定一起${getVal('p1_plan', '舉辦盛大的家庭烤肉派對')}。那一天，我和${getVal('p1_who', '爸爸、媽媽和哥哥')}一起在${getVal('p1_where', '阿公家的庭院生火做準備')}。想到可以和家人一起度過這一天，我的心情${getVal('p1_mood', '興奮得像要飛起來一樣')}！`;
+
+      const p2 = `　　活動一開始，我們先${getVal('p2_step1', '清洗新鮮的食材')}，接著${getVal('p2_step2', '把肉片整齊排上烤架')}。大家分工合作，爸爸負責${getVal('p2_dad', '專心控制火候')}，媽媽則${getVal('p2_mom', '調製美味醬汁')}，我也幫忙${getVal('p2_me', '分送烤好的玉米')}。這時，我看見${getVal('p2_see', '紅紅的炭火劈啪跳躍')}，還聽見${getVal('p2_hear', '肉片滋滋作響的聲音')}。一陣陣${getVal('p2_smell', '香氣四溢')}的香味飄過來，讓我${getVal('p2_feel', '忍不住口水直流')}。大家一邊${getVal('p2_act1', '津津有味的品嚐')}，一邊${getVal('p2_act2', '開心的聊天')}，現場真是熱鬧非凡！`;
+
+      const p3 = `　　這次活動中，最讓我難忘的是${getVal('p3_event', '烤棉花糖的趣味小插曲')}。正當我們${getVal('p3_doing', '專心轉動竹籤')}的時候，突然${getVal('p3_sudden', '哥哥的棉花糖著火變成了小火球')}！沒想到${getVal('p3_surprise', '哥哥急得手忙腳亂一直猛吹')}，逗得大家哈哈大笑。我開心得${getVal('p3_reaction', '肚子都笑痛了')}，心裡覺得${getVal('p3_feeling', '過程實在既刺激又好笑')}。直到現在，我想起這件事還會${getVal('p3_now', '忍不住噗哧一聲笑出來')}呢。`;
+
+      const p4 = `　　這次的家庭活動，讓我深深覺得${getVal('p4_feel_main', '無比的溫暖與幸福')}。我最喜歡和家人一起${getVal('p4_with_family', '同心協力完成一件事')}，因為${getVal('p4_why', '有家人的陪伴最安心')}。這次活動不但讓我${getVal('p4_gain1', '學會了動手分擔家務')}，也讓我${getVal('p4_gain2', '更加珍惜和家人相處的時光')}。我發現，一家人能夠${getVal('p4_realize', '健康平安的圍坐在一起')}，就是最幸福的事。快樂不一定要去很遠的地方，只要一家人在一起，就是最幸福的時光！我希望下次還能和家人一起${getVal('p4_hope', '去戶外露營探索大自然')}！`;
+
+      document.getElementById('essayOutput').textContent = `${p1}\n\n${p2}\n\n${p3}\n\n${p4}`;
+    }
+
+    function insertWord(targetId, word) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.value = word;
+        updateEssay();
+      }
+    }
+
+    function fillExample() {
+      document.getElementById('p1_time').value = "秋高氣爽的中秋節";
+      document.getElementById('p1_activity').value = "聚在一起烤肉賞月";
+      document.getElementById('p1_holiday').value = "中秋連假";
+      document.getElementById('p1_plan').value = "在阿公家的庭院舉辦一場熱鬧的烤肉派對";
+      document.getElementById('p1_who').value = "爸爸、媽媽和哥哥";
+      document.getElementById('p1_where').value = "院子裡搬桌椅、生火做準備";
+      document.getElementById('p1_mood').value = "迫不及待又興奮無比";
+
+      document.getElementById('p2_step1').value = "清洗新鮮的蔬菜和食材";
+      document.getElementById('p2_step2').value = "把一串串香菇、肉片整齊排在烤網上";
+      document.getElementById('p2_dad').value = "生火並專心翻動烤架上的肉片";
+      document.getElementById('p2_mom').value = "調製獨門的烤肉醬汁";
+      document.getElementById('p2_me').value = "把烤好的甜不辣分送給長輩";
+      document.getElementById('p2_see').value = "金黃色的火苗在木炭間跳躍";
+      document.getElementById('p2_hear').value = "肉片在鐵網上發出滋滋作響的聲音";
+      document.getElementById('p2_smell').value = "香氣四溢";
+      document.getElementById('p2_feel').value = "忍不住口水直流、肚子咕嚕叫";
+      document.getElementById('p2_act1').value = "津津有味的大口品嚐";
+      document.getElementById('p2_act2').value = "有說有笑的聊天談心";
+
+      document.getElementById('p3_event').value = "大家一起烤棉花糖的驚險插曲";
+      document.getElementById('p3_doing').value = "專心盯著竹籤上的白色棉花糖";
+      document.getElementById('p3_sudden').value = "一陣大風吹來，哥哥的棉花糖瞬間著火變成了小火球";
+      document.getElementById('p3_surprise').value = "哥哥嚇得手忙腳亂猛吹氣，最後棉花糖變成一顆黑炭";
+      document.getElementById('p3_reaction').value = "笑得東倒西歪、眼淚都流了出來";
+      document.getElementById('p3_feeling').value = "雖然棉花糖焦了，但過程實在太有趣了";
+      document.getElementById('p3_now').value = "嘴角忍不住微微上揚";
+
+      document.getElementById('p4_feel_main').value = "既充實又無比溫暖";
+      document.getElementById('p4_with_family').value = "毫無拘束的聚在一起";
+      document.getElementById('p4_why').value = "平日大家各自忙碌，只有這時能好好陪伴彼此";
+      document.getElementById('p4_gain1').value = "學會了分工合作與體貼他人";
+      document.getElementById('p4_gain2').value = "深刻體會到家人的愛是世界上最珍貴的禮物";
+      document.getElementById('p4_realize').value = "健康平安的圍坐在一起";
+      document.getElementById('p4_hope').value = "舉辦更多溫馨有趣的家庭活動";
+
+      updateEssay();
+    }
+
+    function clearAll() {
+      inputs.forEach(input => {
+        if (input.type === 'text') input.value = '';
+      });
+      updateEssay();
+    }
+
+    function copyEssay() {
+      const text = document.getElementById('essayOutput').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("已成功複製全文！學生可直接對照段落抄寫至作文簿。");
+      });
+    }
+
+    // 初始化
+    updateEssay();
+  </script>
+
+        <!-- AI 自我檢測審查浮動報告 -->
+        <div id="review-report-badge" style="position:fixed;bottom:20px;right:20px;z-index:9999;font-family:sans-serif;">
+          <details style="background:#ffffff;border:2px solid #2563eb;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.15);padding:14px;max-width:380px;font-size:12px;color:#1e293b;">
+            <summary style="font-weight:bold;color:#1d4ed8;cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;">
+              🛡️ 四年級三階審查檢測報告 (點擊展開)
+            </summary>
+            <div style="margin-top:10px;line-height:1.5;">
+              <div><strong>科目：</strong>國語科（翰林版）</div>
+              <div style="color:#b91c1c;"><strong>第一階最低門檻：</strong>❌ 未達標</div>
+              <div style="color:#d97706;"><strong>第二階中階目標：</strong>⚠️ 需確認</div>
+              <div style="color:#4f46e5;"><strong>第三階高階亮點：</strong>⚪ 一般</div>
+              <p style="margin-top:8px;font-size:11px;color:#64748b;">詳情請參閱同目錄下的 <code>worksheet_審查報告.md</code></p>
+            </div>
+          </details>
+        </div>
+        
+</body>
+</html>

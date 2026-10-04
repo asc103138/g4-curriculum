@@ -15,3 +15,13 @@ Thumbs.db
 .env.local
 .gemini/
 scratch/
+
+# Large Textbook Assets & Archives (Keep local only)
+115四上數課習/
+115四上國課習/
+115社會課習/
+115*/
+*.zip
+*.tar.gz
+*.iso
+*.pdf
