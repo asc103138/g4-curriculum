@@ -26,3 +26,6 @@ scratch/
 *.iso
 *.pdf
 .cache/
+
+__pycache__/
+*.pyc
