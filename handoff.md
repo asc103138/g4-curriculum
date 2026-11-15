@@ -1,8 +1,18 @@
 # 交接與進度記錄 (handoff.md)
 
 ## 專案狀態
-- **日期**：2026-11-03
+- **日期**：2026-11-15
 - **目前進度**：
+  - **完成進度適應調整與 Scrapling 爬蟲審查管線升級 (v4.1)**：
+    - **1. 進度感知與自動教材擴展 (Progress-Adaptive Review)**：
+      - 開發 [`scripts/sync_curriculum_progress.py`](./scripts/sync_curriculum_progress.py)，根據當前日期（11月中旬自動識別為期末階段）動態切換期中/期末進度範圍。
+      - 本地缺少期末課習時，自動掃描 Google Drive（`我的雲端硬碟/115四上教材/`）及本地下載目錄，自動解壓縮同步期末教材（國語 L7~L12、數學 Ch6~Ch10、社會 3-1~4-3），並自動擴充更新真實課本文本語料庫。
+      - 審查引擎升級進度對齊檢驗（Progress Alignment），比對教材單元與當前學期進度是否相符，給予精確進度提醒或警告。
+    - **2. Scrapling 高效抗阻斷爬蟲與結構化解析整合**：
+      - 閱讀並深入分析 `https://github.com/D4Vinci/Scrapling.git`，安裝全域技能 [`scrapling`](file:///Users/tunyuan/.gemini/config/skills/scrapling)。
+      - 開發 [`scripts/scrape_educational_resources.py`](./scripts/scrape_educational_resources.py)，整合 `Fetcher` 與 `StealthyFetcher` 高效抓取全國中小學題庫網與教育資源網，自動清洗導覽列與版面雜訊轉為標準 Markdown，並一鍵無縫送入三階漏斗審查。
+    - **3. 全域機制與規範文件同步升級**：
+      - 更新專案 [`AGENTS.md`](./AGENTS.md)、[`docs/review-protocol.md`](./docs/review-protocol.md) 及全域技能 [`g4-curriculum-review`](file:///Users/tunyuan/.gemini/config/skills/g4-curriculum-review/SKILL.md)。
   - 完成全域技能 `g4-curriculum-review` 建置並納入 `antigravity-lazy-packs` 清單。
   - 完成 RDQ 3 輪訪談並產出 Confirmed 需求規格卡：[`rdq/RDQ-spec-curriculum-review-20261004.md`](./rdq/RDQ-spec-curriculum-review-20261004.md)。
   - 建立專案三階審查規範與迷思代碼庫：[`docs/review-protocol.md`](./docs/review-protocol.md)。

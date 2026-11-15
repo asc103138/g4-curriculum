@@ -19,6 +19,18 @@ import glob
 import argparse
 from pathlib import Path
 
+# 匯入進度感知與教材動態擴展模組
+try:
+    from sync_curriculum_progress import (
+        detect_semester_stage,
+        check_local_final_coverage,
+        search_gdrive_and_sync,
+        detect_content_progress_alignment
+    )
+    HAS_PROGRESS_MODULE = True
+except ImportError:
+    HAS_PROGRESS_MODULE = False
+
 # 基礎設定
 CONFIG = {
     "subjects": {
@@ -64,7 +76,7 @@ EXAM_SYSTEM_STOPWORDS = {
     "月考", "評量", "測驗", "試題", "加分", "挑戰", "學生", "老師", "同學", "請在", "完成",
     "記錄", "探究", "討論", "情境", "延伸", "連結", "目標", "指標", "代號", "表現", "內容",
     "生活", "家鄉", "自然", "環境", "社會", "國語", "數學", "四年級", "中年級", "四上", "四下",
-    "翰林", "南一", "康軒", "部定", "版本", "課本", "習作", "單元", "第課", "第一課", "第二課",
+    "翰林", "南一", "康軒", "翰林版", "南一版", "康軒版", "部定", "版本", "課本", "習作", "單元", "第課", "第一課", "第二課",
     "第三課", "第四課", "第五課", "第六課", "統整", "活動", "閱讀", "寫作", "理解", "心得",
     "分享", "思考", "練習", "步驟", "時間", "地點", "人物", "事件", "心情", "五感",
     "視覺", "聽覺", "嗅覺", "味覺", "觸覺", "段落", "起承轉合", "文章", "短文", "照樣造句",
@@ -409,10 +421,18 @@ def verify_tier3_leakage(sections: list) -> list:
 
     return leaks
 
-def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict):
-    """分析文本內容並進行嚴格三階段逐字逐句深層檢測"""
+def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, active_stage: str = "auto"):
+    """分析文本內容並進行嚴格三階段逐字逐句深層檢測與學期進度感知"""
+    if active_stage == "auto" and HAS_PROGRESS_MODULE:
+        active_stage, stage_desc = detect_semester_stage()
+    else:
+        stage_desc = f"指定階段：{active_stage}"
+
     report = {
         "filename": filename,
+        "active_stage": active_stage,
+        "stage_desc": stage_desc,
+        "progress_alignment": None,
         "tier1_pass": True,
         "tier1_issues": [],
         "tier1_corpus_verification": None,
@@ -439,6 +459,13 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict):
         curr_subj = best_subj
     else:
         curr_subj = None
+
+    # 進度對齊分析
+    if curr_subj and HAS_PROGRESS_MODULE:
+        alignment = detect_content_progress_alignment(content, curr_subj, active_stage)
+        report["progress_alignment"] = alignment
+        if not alignment["aligned"] and alignment["notice"]:
+            report["tier1_issues"].append(alignment["notice"])
 
     # 2. 階段一（必須符合階段：最低紅線門檻檢測）
     has_g4 = any(term in content for term in ["四年級", "四上", "四下", "中年級", "4上", "4年級"])
@@ -540,6 +567,11 @@ def generate_markdown_report(analysis: dict) -> str:
     lines.append("## 📋 AI 自我檢測審查報告 (Self-Review Report v4.0 三階段逐字逐句深層檢驗版)")
     lines.append(f"- **檢測檔案**：`{analysis['filename']}`")
     lines.append(f"- **對應科目與版本**：{analysis['detected_subject']}")
+    lines.append(f"- **📅 學期進度階段**：{analysis.get('stage_desc', '未知')}")
+    if analysis.get("progress_alignment"):
+        pa = analysis["progress_alignment"]
+        if pa.get("notice"):
+            lines.append(f"- **🎯 進度對齊檢驗**：{pa['notice']}")
     
     # 階段一
     if analysis["tier1_pass"]:
@@ -603,7 +635,7 @@ def generate_markdown_report(analysis: dict) -> str:
     lines.append("\n*審查系統：臺中市梧棲區中正國小四年級教材審查機制（Review Protocol v4.0 三階段逐字逐句深層檢驗版）*")
     return "\n".join(lines)
 
-def process_file(file_path: Path, output_dir: Path, corpus: dict, lexicon: dict):
+def process_file(file_path: Path, output_dir: Path, corpus: dict, lexicon: dict, active_stage: str = "auto"):
     """處理單一檔案，落實同型態輸出與審查"""
     if not file_path.exists():
         print(f"❌ 檔案不存在: {file_path}")
@@ -618,7 +650,7 @@ def process_file(file_path: Path, output_dir: Path, corpus: dict, lexicon: dict)
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
-    analysis = analyze_content(content, file_path.name, corpus, lexicon)
+    analysis = analyze_content(content, file_path.name, corpus, lexicon, active_stage=active_stage)
     md_report = generate_markdown_report(analysis)
 
     # 輸出審查報告 Markdown
@@ -709,13 +741,24 @@ def check_single_term(term: str, subject_key: str, corpus: dict):
         print(f"\n❌ 詞彙「{term}」未在【{subject_key}】課本或習作中查得！（判定為未學/超綱）\n")
 
 def main():
-    parser = argparse.ArgumentParser(description="國小四年級教材與試題三階段深層比對審查工具（v4.0 逐字逐句深層檢驗版）")
+    parser = argparse.ArgumentParser(description="國小四年級教材與試題三階段深層比對審查工具（v4.0 逐字逐句深層檢驗 + 進度感知版）")
     parser.add_argument("files", nargs="*", help="欲審查的檔案路徑 (支援 .md, .html 等)")
     parser.add_argument("--output-dir", default="reviewed", help="審查結果存放目錄 (預設: reviewed)")
+    parser.add_argument("--stage", choices=["auto", "midterm", "final"], default="auto", help="指定教學階段 (預設 auto 自動感知)")
+    parser.add_argument("--sync", action="store_true", help="強制自動搜尋 Google Drive / 本地擴展教材")
     parser.add_argument("--rebuild-cache", action="store_true", help="強制重新提取並建立課本語料快取")
     parser.add_argument("--check-term", help="快速查詢某詞彙是否存在於真實課本習作中")
     parser.add_argument("--subject", choices=["chinese", "math", "social"], default="chinese", help="查詢時指定科目 (預設: chinese)")
     args = parser.parse_args()
+
+    # 自動進度判定與教材覆蓋檢查
+    if HAS_PROGRESS_MODULE:
+        curr_stage, stage_desc = detect_semester_stage()
+        effective_stage = curr_stage if args.stage == "auto" else args.stage
+        print(f"📅 學期進度階段：{stage_desc}")
+        # 若為期末階段且缺少教材，自動自雲端硬碟同步
+        if args.sync or effective_stage == "final":
+            search_gdrive_and_sync(stage=effective_stage, verbose=True)
 
     corpus = load_or_build_corpus(force_rebuild=args.rebuild_cache)
     lexicon = load_lexicon_data()
@@ -730,7 +773,7 @@ def main():
 
     out_path = Path(args.output_dir)
     for f in args.files:
-        process_file(Path(f), out_path, corpus, lexicon)
+        process_file(Path(f), out_path, corpus, lexicon, active_stage=args.stage)
 
 if __name__ == "__main__":
     main()

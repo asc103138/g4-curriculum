@@ -13,13 +13,30 @@
 
 ---
 
-## 🔍 三階漏斗審查原則 (Three-Tier Funnel Protocol)
+## 🔍 三階漏斗審查原則 (Three-Tier Funnel Protocol v4.1)
 
 | 階層 | 名稱 | 判定標準 | 處置方式 |
 |---|---|---|---|
-| **第一階** | 🛑 最低門檻 (Must-Have) | **嚴格實體驗證，嚴禁幻覺審查**：必須透過 `check_curriculum.py` 實際比對本機課習 PDF 語料，命題生字詞彙非本冊出現者視為超綱；對齊單元課次與 108 課綱指標 | **未達標直接打回重置，禁止交付** |
-| **第二階** | ⚠️ 中階目標 (Should-Have) | CLT 認知負荷（3~4元素）、SDGs 永續融入、STEAM 跨域思維 | **未達標嚴格列出缺失退回，由教師確認後修正** |
-| **第三階** | 🌟 高階目標 (Nice-to-Have) | 四年級經典迷思概念誘答設計、海線在地生活化情境、18項議題 | **不勉強，達成時列為加分亮點與診斷標籤** |
+| **第一階** | 🛑 必須符合 (Must-Have) | **嚴格實體驗證，嚴禁幻覺審查**：必須透過 `check_curriculum.py` 實際比對本機課習 PDF 語料，命題生字詞彙非本冊出現者視為超綱；對齊單元課次、當前學期進度階段（期中/期末）與 108 課綱指標 | **未達標直接打回重置，禁止交付** |
+| **第二階** | ⚠️ 大部分符合 (Should-Have) | 生字考點必須 100% 來自當冊正式課本生字表；CLT 認知負荷（3~4元素）、SDGs 永續融入、STEAM 跨域思維 | **未達標嚴格列出缺失退回，由教師確認後修正** |
+| **第三階** | 🌟 盡力符合 (Nice-to-Have) | 全卷邏輯性、零跨大題洩題碰撞；四年級經典迷思概念誘答設計、海線在地生活化情境、18項議題 | **不勉強，達成時列為加分亮點與診斷標籤** |
+
+---
+
+## 📅 學期進度進程感知機制 (Progress-Adaptive Review)
+- **期中階段（Midterm Stage）**：開學～11月中旬。涵蓋國語 L1~L6、數學 Ch1~Ch5、社會單元1~2。
+- **期末階段（Final Stage）**：11月中旬～學期末。期中考完畢後，系統自動切換為期末範圍（國語 L7~L12、數學 Ch6~Ch10、社會單元3~5）。
+- **自動搜尋與教材擴展**：
+  - 進入期末進度時，自動檢測本地教材目錄是否具備期末範圍課習 PDF。
+  - 若缺少，自動檢索使用者 Google Drive（`/Users/tunyuan/Library/CloudStorage/GoogleDrive-asc103138@st.tc.edu.tw/我的雲端硬碟/115四上教材/`）及本地下載目錄，自動解壓縮同步並更新語料庫。
+  - 亦可手動指定進度模式：`python3 scripts/check_curriculum.py <檔案> [--stage midterm/final/auto] [--sync]`。
+
+---
+
+## 🌐 Scrapling 爬蟲與調適性解析管線 (Scrapling Integration)
+- **抗阻斷擷取**：整合 Scrapling 爬蟲框架，透過 `Fetcher` 與 `StealthyFetcher` 高效抓取全國中小學題庫網與教育備課網頁，避免前端反爬與動態渲染阻礙。
+- **無損轉 Markdown**：自動過濾廣告與無關元素，將線上試題結構化為乾淨的 Markdown 格式。
+- **一鍵審查管線**：執行 `python3 scripts/scrape_educational_resources.py <URL>`，抓取後即時進入三階漏斗審查，自動在 `reviewed/` 產出同型態優化教材與檢核報告。
 
 ---
 
