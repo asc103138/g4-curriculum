@@ -3,6 +3,10 @@
 ## 專案狀態
 - **日期**：2026-11-15
 - **目前進度**：
+  - **完成考卷防呆與深度邏輯審查升級 (v4.2)**：
+    - **生字表升級為階段一紅線一票否決**：在 [`scripts/check_curriculum.py`](./scripts/check_curriculum.py) 新增 `verify_tier1_vocab_table()` 與 `filter_corpus_by_stage()`，支援 `【】` / `（）` 格式並依期中/期末嚴格切片隔離語料庫與生字表（期中絕不混用未來課次）。
+    - **題幹字級超綱攔截 & 教學重點檢核**：針對所有試題大題題幹逐字比對本階段課習語料庫，精準攔截未教過字詞（如「陰霾」的「霾」）；並自動核對「改錯字」等大題是否符合本階段習作教學重點。修正 [`scripts/sync_curriculum_progress.py`](./scripts/sync_curriculum_progress.py) 期末真實課名（L07~L12）。
+    - **全卷雙向跨大題洩題碰撞 + 大題邏輯連續性檢核**：升級 `verify_tier3_leakage()` 涵蓋單字、改錯正字、選詞答案雙向碰撞；新增 `verify_tier3_logic_sequence()` 檢核大題編排是否符合「字詞 → 句型 → 選擇 → 閱讀寫作」遞進順序。
   - **完成進度適應調整與 Scrapling 爬蟲審查管線升級 (v4.1)**：
     - **1. 進度感知與自動教材擴展 (Progress-Adaptive Review)**：
       - 開發 [`scripts/sync_curriculum_progress.py`](./scripts/sync_curriculum_progress.py)，根據當前日期（11月中旬自動識別為期末階段）動態切換期中/期末進度範圍。
