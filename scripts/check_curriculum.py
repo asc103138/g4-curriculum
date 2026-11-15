@@ -154,7 +154,8 @@ def load_lexicon_data() -> dict:
             for subj, units in raw.items():
                 processed[subj] = {
                     "characters": set(),
-                    "core_vocab": set()
+                    "core_vocab": set(),
+                    "units": units
                 }
                 for u_key, u_info in units.items():
                     for ch in u_info.get("characters", []):
@@ -165,10 +166,41 @@ def load_lexicon_data() -> dict:
         except Exception:
             pass
     return {
-        "chinese": {"characters": set(), "core_vocab": set()},
-        "math": {"characters": set(), "core_vocab": set()},
-        "social": {"characters": set(), "core_vocab": set()}
+        "chinese": {"characters": set(), "core_vocab": set(), "units": {}},
+        "math": {"characters": set(), "core_vocab": set(), "units": {}},
+        "social": {"characters": set(), "core_vocab": set(), "units": {}}
     }
+
+def filter_corpus_by_stage(subj_corpus: dict, subject_key: str, active_stage: str) -> dict:
+    """依據學期進度階段嚴格切片過濾語料庫，確保期中考絕不混入期末未來課次文本"""
+    if active_stage != "midterm":
+        return subj_corpus
+
+    midterm_markers = {
+        "chinese": ["L01", "L02", "L03", "L04", "L05", "L06", "統整一", "統整二"],
+        "math": ["ch01", "ch02", "ch03", "ch04", "ch05", "加油小站1", "單元名詞"],
+        "social": ["1-1", "1-2", "1-3", "2-1", "2-2"]
+    }
+    markers = midterm_markers.get(subject_key, [])
+    if not markers:
+        return subj_corpus
+
+    filtered = {k: v for k, v in subj_corpus.items() if any(m in k for m in markers)}
+    return filtered if filtered else subj_corpus
+
+def get_stage_characters(lexicon: dict, subject_key: str, active_stage: str) -> set:
+    """取得對應階段之正式課本生字表"""
+    subj_lex = lexicon.get(subject_key, {})
+    units = subj_lex.get("units", {})
+    if active_stage == "midterm" and units:
+        mid_keys = {"L01", "L02", "L03", "L04", "L05", "L06", "統整一", "統整二"}
+        chars = set()
+        for k, info in units.items():
+            if k in mid_keys:
+                chars.update(info.get("characters", []))
+        if chars:
+            return chars
+    return subj_lex.get("characters", set())
 
 def split_into_sections(content: str) -> list:
     """將測驗卷或學習單依大題與區塊進行切割，供跨題型邏輯與防洩題檢核"""
@@ -282,31 +314,36 @@ def extract_all_assessment_terms(content: str) -> dict:
     results["content_tokens"] = sorted(list(extracted_tokens))
     return results
 
-def verify_tier1_terms(extracted: dict, subject_key: str, corpus: dict) -> dict:
+def verify_tier1_terms(extracted: dict, subject_key: str, corpus: dict, sections: list = None, active_stage: str = "auto") -> dict:
     """
-    【階段一：必須符合階段】全方位逐字逐句比對實體語料庫：
-    1. 驗證選項高風險詞（未學超綱一票否決）
-    2. 驗證括號/填空詞（未學超綱一票否決）
-    3. 驗證好詞百寶箱（未學超綱一票否決）
-    4. 檢視全文與本冊課習之命中詞彙數（確認具備實質關聯）
+    【階段一：必須符合階段】全方位逐字逐句比對實體語料庫（v4.2 進度切片與題幹字級攔截）：
+    1. 依進度階段切片語料庫（期中僅限 L1~L6 / Ch1~Ch5 / 1-1~2-2）
+    2. 驗證選項高風險詞（未學超綱一票否決）
+    3. 驗證括號/填空詞（未學超綱一票否決）
+    4. 驗證好詞百寶箱（未學超綱一票否決）
+    5. 驗證題幹句子之生僻字/未學詞（如改錯字題幹出現「陰霾」的「霾」，一票否決）
     """
-    subj_corpus = corpus.get(subject_key, {})
-    if not subj_corpus:
+    raw_subj_corpus = corpus.get(subject_key, {})
+    if not raw_subj_corpus:
         return {
             "has_corpus": False,
             "total_checked": 0,
             "found_terms": [],
             "missing_terms": [],
             "missing_options": [],
-            "missing_bracketed": []
+            "missing_bracketed": [],
+            "missing_stem_chars": []
         }
 
+    subj_corpus = filter_corpus_by_stage(raw_subj_corpus, subject_key, active_stage)
     combined_text = "".join(subj_corpus.values())
+    corpus_char_set = set(ch for ch in combined_text if "\u4e00" <= ch <= "\u9fa5")
 
     found_terms = set()
     missing_terms = set()
     missing_options = []
     missing_bracketed = []
+    missing_stem_chars = []
 
     # 1. 驗證選項
     for item in extracted["options"]:
@@ -338,88 +375,214 @@ def verify_tier1_terms(extracted: dict, subject_key: str, corpus: dict) -> dict:
         if word in combined_text:
             found_terms.add(word)
 
+    # 5. 題幹字級超綱掃描（特別攔截如改錯字/選擇題題幹出現未教過的字如「霾」）
+    if sections and subject_key == "chinese":
+        seen_char_line = set()
+        for sec in sections:
+            # 排除非學生作答之設計說明/排版/教師報告/自由寫作範文區塊
+            if any(skip in sec["title"] for skip in ["前言", "審查檢測報告", "AI 自我檢測", "版面配置", "設計建議", "核心目標", "教師", "說明", "附錄", "範文", "寫作"]):
+                continue
+            # 僅針對實質試題大題（或含題號的行）進行字級掃描
+            is_exam_sec = bool(re.search(r"國字|注音|生字|改錯|錯字|選擇|填空|選詞|閱讀|測驗|評量|綜合|問答", sec["title"]))
+            is_error_fix_sec = bool(re.search(r"改錯|錯字|錯別字", sec["title"]))
+            for l_num, l_txt in sec["lines"]:
+                s_line = l_txt.strip()
+                if not s_line or s_line.startswith("#") or s_line.startswith("|") or s_line.startswith(">"):
+                    continue
+                is_numbered_item = bool(re.match(r"^(\d+[\.\、\)]|[（\(]\d+[）\)]|[①②③④⑤⑥⑦⑧⑨⑩])", s_line))
+                if not (is_exam_sec or is_numbered_item):
+                    continue
+                # 排除改錯字答案註記中的刻意錯字本身（若標註為 (改錯:X->Y) 或 【錯字】）
+                clean_stem = re.sub(r"\(改錯[：:].*?\)|（改錯[：:].*?）", "", s_line)
+                clean_stem = re.sub(r"\[錯.*?\]|【錯.*?】", "", clean_stem)
+                for idx_c, ch in enumerate(clean_stem):
+                    if "\u4e00" <= ch <= "\u9fa5":
+                        if ch not in corpus_char_set and ch not in "".join(CONFIG["local_keywords"]):
+                            # 擷取前後文 2~3 字詞彙
+                            ctx_word = clean_stem[max(0, idx_c-1):min(len(clean_stem), idx_c+2)]
+                            # 若該字不在語料庫且所屬雙字詞也不在語料庫（非改錯題刻意製造之同音錯字或確認為超綱生僻字）
+                            key = (l_num, ch)
+                            if key not in seen_char_line:
+                                seen_char_line.add(key)
+                                missing_stem_chars.append({
+                                    "char": ch,
+                                    "context_word": ctx_word,
+                                    "line": l_num,
+                                    "section": sec["title"],
+                                    "is_error_fix": is_error_fix_sec,
+                                    "snippet": s_line[:50]
+                                })
+
     return {
         "has_corpus": True,
         "total_checked": len(found_terms) + len(missing_terms),
         "found_terms": sorted(list(found_terms)),
         "missing_terms": sorted(list(missing_terms)),
         "missing_options": missing_options,
-        "missing_bracketed": missing_bracketed
+        "missing_bracketed": missing_bracketed,
+        "missing_stem_chars": missing_stem_chars
     }
 
-def verify_tier2_focus(sections: list, subject_key: str, lexicon: dict) -> list:
+def verify_tier1_vocab_table(sections: list, subject_key: str, lexicon: dict, active_stage: str) -> list:
     """
-    【階段二：大部分符合階段】檢驗教材教學重點之用字用詞謹慎度：
-    - 考生字的題目（如：國字注音大題），考點必須 100% 來自當冊正式課本生字表。
-    - 若考的是課本內的字、但卻不是生字表內的字（例如課文出現的「美」、「看」），嚴格發出警示。
+    【階段一：紅線一票否決】檢驗「考生字/國字注音」大題的考點，是否 100% 來自該階段正式課本生字表。
+    （修正舊版只列階段二警告的漏洞，正式升格為階段一打回重置紅線！）
+    """
+    issues = []
+    if subject_key != "chinese":
+        return issues
+    char_set = get_stage_characters(lexicon, subject_key, active_stage)
+    if not char_set:
+        return issues
+
+    for sec in sections:
+        if re.search(r"國字|注音|生字|字形|寫出", sec["title"]):
+            for l_num, l_txt in sec["lines"]:
+                if l_txt.strip().startswith("#"):
+                    continue
+                # 支援 【X】、以及括號前的目標字（如 `（ ）鷹` 或 `飛（ㄒㄧㄤˊ）`）
+                targets = []
+                for m in re.finditer(r"【(.*?)】", l_txt):
+                    targets.append(m.group(1).strip())
+                for m in re.finditer(r"[（(]([\u4e00-\u9fa5]{1,3})[）)]", l_txt):
+                    val = m.group(1).strip()
+                    if val not in EXAM_SYSTEM_STOPWORDS and not re.search(r"分|題", val):
+                        targets.append(val)
+
+                for word in targets:
+                    for ch in word:
+                        if "\u4e00" <= ch <= "\u9fa5" and ch not in char_set:
+                            issues.append({
+                                "char": ch,
+                                "word": word,
+                                "line": l_num,
+                                "section": sec["title"],
+                                "reason": f"第{l_num}行考生字考點「{ch}」（出自「{word}」）非本階段（{active_stage}）翰林國語課本正式生字表列字，屬嚴重超綱！"
+                            })
+    return issues
+
+def verify_tier2_focus(sections: list, subject_key: str, corpus: dict, active_stage: str = "auto") -> list:
+    """
+    【階段二：大部分符合階段】檢驗題型與課本教學重點匹配度：
+    - 檢核試卷大題（如「改錯字」）是否確實為本冊/本階段課習之教學重點題型。
     """
     warnings = []
-    subj_lexicon = lexicon.get(subject_key, {})
-    char_set = subj_lexicon.get("characters", set())
-    if not char_set or subject_key != "chinese":
+    if subject_key != "chinese":
         return warnings
 
-    for s_idx, sec in enumerate(sections):
-        # 判定是否為國字/注音/生字考查大題
-        is_vocab_section = bool(re.search(r"國字|注音|生字|字形|寫出", sec["title"]))
-        if is_vocab_section:
-            for l_num, l_txt in sec["lines"]:
-                # 抽取填空考點 【X】
-                for m in re.finditer(r"【(.*?)】", l_txt):
-                    word = m.group(1).strip()
-                    for ch in word:
-                        if "\u4e00" <= ch <= "\u9fa5":
-                            if ch not in char_set:
-                                warnings.append({
-                                    "char": ch,
-                                    "word": word,
-                                    "line": l_num,
-                                    "section": sec["title"],
-                                    "reason": f"第{l_num}行考點「{ch}」雖為常用字，但非本冊翰林國語生字表列字！考生字大題應嚴格使用生字表字彙。"
-                                })
+    raw_subj_corpus = corpus.get(subject_key, {})
+    subj_corpus = filter_corpus_by_stage(raw_subj_corpus, subject_key, active_stage)
+    combined_text = "".join(subj_corpus.values())
+
+    for sec in sections:
+        if re.search(r"改錯|錯字|錯別字", sec["title"]):
+            # 檢驗本階段習作中是否教過「改錯/錯別字」題型
+            has_error_fix_in_wb = any(kw in combined_text for kw in ["改錯", "錯別字", "圈出錯字"])
+            if not has_error_fix_in_wb:
+                warnings.append({
+                    "section": sec["title"],
+                    "reason": f"大題「{sec['title']}」在翰林四上本階段（{active_stage}）課本與習作中並無『改錯字』獨立教學重點，建議改為字音字形辨析或詞語運用。"
+                })
     return warnings
 
 def verify_tier3_leakage(sections: list) -> list:
     """
-    【階段三：盡力符合階段】檢驗全卷邏輯性、適配性與零跨大題洩題碰撞：
-    - 第一大題考查之生字注音，嚴禁在後續大題（選擇題題幹/選項、改錯字題目、閱讀篇章）中出現正字洩漏答案。
+    【階段三：全卷雙向跨大題洩題碰撞檢查】
+    1. 收集所有大題考點答案：國字注音【字】、改錯字正字、選詞填空/選擇題括號目標詞。
+    2. 雙向比對：無論前面洩漏後面，或後面洩漏前面，只要題幹或選項出現他題考點正字/答案詞，立即攔截！
     """
     leaks = []
-    vocab_targets = []
+    targets = []
+
     for s_idx, sec in enumerate(sections):
-        if re.search(r"國字|注音|生字|字形|寫出", sec["title"]):
-            for l_num, l_txt in sec["lines"]:
+        if any(skip in sec["title"] for skip in ["前言", "審查檢測報告", "AI 自我檢測"]):
+            continue
+        is_vocab_sec = bool(re.search(r"國字|注音|生字|字形|寫出", sec["title"]))
+        is_fix_sec = bool(re.search(r"改錯|錯字|錯別字", sec["title"]))
+        is_fill_sec = bool(re.search(r"選詞|填空|短語|成語|造句|詞語", sec["title"]))
+
+        for l_num, l_txt in sec["lines"]:
+            if l_txt.strip().startswith("#"):
+                continue
+
+            # 1. 國字注音與改錯字之單字考點
+            if is_vocab_sec or is_fix_sec:
                 for m in re.finditer(r"【(.*?)】", l_txt):
                     word = m.group(1).strip()
                     for ch in word:
                         if "\u4e00" <= ch <= "\u9fa5":
-                            vocab_targets.append({
-                                "char": ch,
-                                "line": l_num,
-                                "sec_idx": s_idx,
-                                "sec_title": sec["title"]
-                            })
+                            targets.append({"token": ch, "kind": "生字/正字", "line": l_num, "sec_idx": s_idx, "sec_title": sec["title"]})
+                # 改錯字常見格式：(改錯: X -> Y) 或 （正確：Y）
+                for m in re.finditer(r"(?:->|→|改為|正確[：:])\s*([\u4e00-\u9fa5]{1,2})", l_txt):
+                    for ch in m.group(1):
+                        targets.append({"token": ch, "kind": "改錯正字", "line": l_num, "sec_idx": s_idx, "sec_title": sec["title"]})
 
-    for target in vocab_targets:
-        ch = target["char"]
+            # 2. 詞彙/選詞填空之詞語考點（>=2字詞）
+            if is_fill_sec:
+                for m in re.finditer(r"【([\u4e00-\u9fa5]{2,6})】", l_txt):
+                    targets.append({"token": m.group(1), "kind": "選詞答案", "line": l_num, "sec_idx": s_idx, "sec_title": sec["title"]})
+
+    # 雙向比對其他大題
+    seen_leak = set()
+    for target in targets:
+        tok = target["token"]
         for s_idx, sec in enumerate(sections):
-            if s_idx == target["sec_idx"]:
+            if s_idx == target["sec_idx"] or any(skip in sec["title"] for skip in ["前言", "審查檢測報告", "AI 自我檢測"]):
                 continue
             for l_num, l_txt in sec["lines"]:
-                # 排除考點本體括號與答案改錯說明提示
+                if l_txt.strip().startswith("#"):
+                    continue
                 clean_l = re.sub(r"【.*?】", "", l_txt)
                 clean_l = re.sub(r"\(改錯[：:].*?\)|（改錯[：:].*?）", "", clean_l)
-                if ch in clean_l:
-                    leaks.append({
-                        "char": ch,
-                        "target_sec": target["sec_title"],
-                        "target_line": target["line"],
-                        "leaked_sec": sec["title"],
-                        "leaked_line": l_num,
-                        "snippet": l_txt.strip()
-                    })
+                if tok in clean_l:
+                    direction = "前面大題洩漏後面答案" if s_idx < target["sec_idx"] else "後面大題洩漏前面答案"
+                    lkey = (tok, target["sec_idx"], s_idx, l_num)
+                    if lkey not in seen_leak:
+                        seen_leak.add(lkey)
+                        leaks.append({
+                            "char": tok,
+                            "kind": target["kind"],
+                            "direction": direction,
+                            "target_sec": target["sec_title"],
+                            "target_line": target["line"],
+                            "leaked_sec": sec["title"],
+                            "leaked_line": l_num,
+                            "snippet": l_txt.strip()[:55]
+                        })
 
     return leaks
+
+def verify_tier3_logic_sequence(sections: list) -> list:
+    """
+    檢核全卷大題認知層級與邏輯連續性：
+    標準順序應為：Level 1 (字音字形/生字/改錯) -> Level 2 (詞語/成語/語法句型) -> Level 3 (綜合選擇) -> Level 4 (閱讀理解/寫作素養)
+    """
+    logic_issues = []
+    sec_levels = []
+    for sec in sections:
+        title = sec["title"]
+        if any(skip in title for skip in ["前言", "審查檢測報告", "AI 自我檢測"]):
+            continue
+        if re.search(r"國字|注音|生字|字形|寫出|改錯|錯字", title):
+            lvl = 1
+        elif re.search(r"選詞|詞語|成語|短語|句型|修辭|造句|照樣", title):
+            lvl = 2
+        elif re.search(r"選擇|綜合|是非|配合", title):
+            lvl = 3
+        elif re.search(r"閱讀|素養|問答|作文|寫作", title):
+            lvl = 4
+        else:
+            continue
+        sec_levels.append((lvl, title))
+
+    for i in range(1, len(sec_levels)):
+        prev_lvl, prev_title = sec_levels[i - 1]
+        curr_lvl, curr_title = sec_levels[i]
+        if curr_lvl < prev_lvl:
+            logic_issues.append(
+                f"大題順序邏輯斷裂：「{curr_title}」(層級{curr_lvl}) 排在「{prev_title}」(層級{prev_lvl}) 之後，建議調整為『字詞基礎 → 句型修辭 → 綜合選擇 → 閱讀寫作』由淺入深。"
+            )
+    return logic_issues
 
 def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, active_stage: str = "auto"):
     """分析文本內容並進行嚴格三階段逐字逐句深層檢測與學期進度感知"""
@@ -442,9 +605,12 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
         "tier3_pass": False,
         "tier3_highlights": [],
         "tier3_leaks": [],
+        "tier3_logic_issues": [],
         "detected_subject": "未知科目",
         "misconceptions_found": []
     }
+
+    sections = split_into_sections(content)
 
     # 1. 偵測科目
     subject_scores = {"math": 0, "chinese": 0, "social": 0}
@@ -492,7 +658,7 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
     # 逐字逐句深度抽驗比對實體語料庫
     if curr_subj and corpus.get(curr_subj):
         extracted = extract_all_assessment_terms(content)
-        ver_res = verify_tier1_terms(extracted, curr_subj, corpus)
+        ver_res = verify_tier1_terms(extracted, curr_subj, corpus, sections=sections, active_stage=active_stage)
         report["tier1_corpus_verification"] = ver_res
 
         # 若有選項超綱，屬致命嚴重違規
@@ -509,6 +675,21 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
                 f"🚨【致命紅線】題目填空/重點標示出現非本冊課本/習作詞彙：{', '.join(brk_details)}。"
             )
 
+        # 若有題幹超綱字（如改錯字題幹出現「陰霾」的「霾」）
+        if ver_res.get("missing_stem_chars"):
+            stem_details = [f"第{item['line']}行「{item['char']}」(詞:{item['context_word']})" for item in ver_res["missing_stem_chars"][:6]]
+            report["tier1_issues"].append(
+                f"🚨【致命紅線】題幹敘述出現非本階段（{active_stage}）課習語料庫之超綱生字詞：{', '.join(stem_details)}。"
+            )
+
+        # 考生字大題必須 100% 來自本階段正式生字表（一票否決紅線）
+        vocab_issues = verify_tier1_vocab_table(sections, curr_subj, lexicon, active_stage)
+        if vocab_issues:
+            v_details = [f"第{vi['line']}行「{vi['char']}」" for vi in vocab_issues[:6]]
+            report["tier1_issues"].append(
+                f"🚨【致命紅線】國字注音/考生字大題出現非正式生字表列字（嚴重超綱）：{', '.join(v_details)}。"
+            )
+
         # 若抽驗詞彙數為 0，嚴禁假通過
         if len(ver_res["found_terms"]) == 0:
             report["tier1_issues"].append(
@@ -518,13 +699,13 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
     if report["tier1_issues"]:
         report["tier1_pass"] = False
 
-    # 3. 階段二（大部分符合階段：教學重點用字用詞謹慎度檢測）
-    sections = split_into_sections(content)
+    # 3. 階段二（大部分符合階段：教學重點題型與用字謹慎度檢測）
     if curr_subj:
-        tier2_warnings = verify_tier2_focus(sections, curr_subj, lexicon)
+        tier2_warnings = verify_tier2_focus(sections, curr_subj, corpus, active_stage=active_stage)
         report["tier2_warnings"] = tier2_warnings
         if tier2_warnings:
-            report["tier2_missing"].append(f"生字考點用字偏離教學重點表（共發現 {len(tier2_warnings)} 處非生字表列字）。")
+            for tw in tier2_warnings:
+                report["tier2_missing"].append(tw["reason"])
 
     has_sdgs = any(kw in content for kw in CONFIG["tier2_keywords"]["sdgs"])
     if not has_sdgs:
@@ -541,9 +722,11 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
     if report["tier2_missing"]:
         report["tier2_pass"] = False
 
-    # 4. 階段三（盡力符合階段：跨題型邏輯性、適配性與零跨大題洩題檢測）
+    # 4. 階段三（盡力符合階段：跨題型邏輯性、大題編排連續性與雙向跨大題洩題檢測）
     leaks = verify_tier3_leakage(sections)
     report["tier3_leaks"] = leaks
+    logic_issues = verify_tier3_logic_sequence(sections)
+    report["tier3_logic_issues"] = logic_issues
 
     for lkw in CONFIG["local_keywords"]:
         if lkw in content:
@@ -555,7 +738,7 @@ def analyze_content(content: str, filename: str, corpus: dict, lexicon: dict, ac
                 report["misconceptions_found"].append(misc)
                 report["tier3_highlights"].append(f"具備高階迷思診斷誘答機制：【{misc}】")
 
-    if report["tier3_highlights"] and not leaks:
+    if report["tier3_highlights"] and not leaks and not logic_issues:
         report["tier3_pass"] = True
 
     return report
@@ -599,11 +782,15 @@ def generate_markdown_report(analysis: dict) -> str:
                 lines.append("  - 🚫 超綱填空清單（必須更換）：")
                 for mb in ver["missing_bracketed"][:5]:
                     lines.append(f"    • 第 {mb['line']} 行填空: `{mb['word']}` (課習未查得)")
+            if ver.get("missing_stem_chars"):
+                lines.append("  - 🚫 題幹敘述超綱字詞清單（如改錯字/選擇題幹未學字，必須更換）：")
+                for ms in ver["missing_stem_chars"][:6]:
+                    lines.append(f"    • 第 {ms['line']} 行 ({ms['section']}): `{ms['char']}` 出現在「{ms['context_word']}」— 本階段課習未曾出現！")
 
     # 階段二
     if analysis["tier2_pass"]:
         lines.append("- **⚠️ 階段二（大部分符合階段・教學重點謹慎使用）：✅ 審查通過**")
-        lines.append("  - 教學重點考點：生字考點 100% 符合當冊正式生字表。")
+        lines.append("  - 教學重點考點：大題題型與教學重點匹配。")
         lines.append("  - 認知負荷 (CLT)：版面配置與題幹長度符合四年級記憶負載。")
         lines.append("  - SDGs 融入：具備生活化永續發展目標。")
         lines.append("  - STEAM 跨域：具備科學/數學探究連結。")
@@ -614,25 +801,29 @@ def generate_markdown_report(analysis: dict) -> str:
         if analysis["tier2_warnings"]:
             lines.append("  - 🔍 教學重點偏離警告清單：")
             for w in analysis["tier2_warnings"][:4]:
-                lines.append(f"    • 第 {w['line']} 行「{w['char']}」({w['section']}): 雖在課文出現但非正式生字表列字，建議更換。")
+                lines.append(f"    • {w.get('reason', w.get('section'))}")
 
     # 階段三
     if analysis["tier3_pass"]:
         lines.append("- **🌟 階段三（盡力符合階段・邏輯適配與加分亮點）：⭐ 加分亮點達成**")
-        lines.append("  - 跨大題邏輯：零跨大題洩題碰撞（前大題考點未在後續大題洩漏答案）。")
+        lines.append("  - 跨大題邏輯：零跨大題洩題碰撞（全卷雙向無洩題），大題認知順序連續。")
         for h in set(analysis["tier3_highlights"]):
             lines.append(f"  - ★ {h}")
     else:
-        lines.append("- **🌟 階段三（盡力符合階段・邏輯適配與加分亮點）：⚪ 基礎達標或有洩題碰撞**")
+        lines.append("- **🌟 階段三（盡力符合階段・邏輯適配與加分亮點）：⚪ 基礎達標或有洩題/邏輯問題**")
         if analysis["tier3_leaks"]:
             lines.append("  - 🚨 跨大題洩題自我碰撞警告（必須修正）：")
-            for lk in analysis["tier3_leaks"][:4]:
-                lines.append(f"    • 考點「{lk['char']}」(源自第{lk['target_line']}行 {lk['target_sec']}) 在後續第{lk['leaked_line']}行洩漏答案: `{lk['snippet']}`")
+            for lk in analysis["tier3_leaks"][:6]:
+                lines.append(f"    • [{lk.get('direction', '洩題')}] {lk.get('kind', '考點')}「{lk['char']}」(第{lk['target_line']}行 {lk['target_sec']}) 在第{lk['leaked_line']}行 ({lk['leaked_sec']}) 洩漏答案: `{lk['snippet']}`")
+        if analysis.get("tier3_logic_issues"):
+            lines.append("  - 🧩 大題認知邏輯連續性警示：")
+            for li in analysis["tier3_logic_issues"]:
+                lines.append(f"    • {li}")
         if analysis["tier3_highlights"]:
             for h in set(analysis["tier3_highlights"]):
                 lines.append(f"  - ★ {h}")
 
-    lines.append("\n*審查系統：臺中市梧棲區中正國小四年級教材審查機制（Review Protocol v4.0 三階段逐字逐句深層檢驗版）*")
+    lines.append("\n*審查系統：臺中市梧棲區中正國小四年級教材審查機制（Review Protocol v4.2 考卷防呆與深度邏輯審查版）*")
     return "\n".join(lines)
 
 def process_file(file_path: Path, output_dir: Path, corpus: dict, lexicon: dict, active_stage: str = "auto"):
