@@ -3,6 +3,9 @@
 ## 專案狀態
 - **日期**：2026-11-15
 - **目前進度**：
+  - **衍生建置國小一年級（翰林版數學）專屬審查專案 (`g1-curriculum`)**：
+    - 完成 RDQ 需求訪談與規格確認：[`rdq/RDQ-spec-g1-math-curriculum-review-20261115.md`](./rdq/RDQ-spec-g1-math-curriculum-review-20261115.md)（`status: confirmed`）。
+    - 於 `/Users/tunyuan/anti/g1-curriculum` 完成獨立專案初始化與 Step 1 骨架建置（含 `AGENTS.md`、`docs/review-protocol.md` 翰林小一數學全學年 18 單元與 `M1-*` 迷思代碼庫、預留課習 PDF 掛載孔）；後續將於 `g1-curriculum` 推進 Step 2～Step 4。
   - **完成考卷防呆與深度邏輯審查升級 (v4.2)**：
     - **生字表升級為階段一紅線一票否決**：在 [`scripts/check_curriculum.py`](./scripts/check_curriculum.py) 新增 `verify_tier1_vocab_table()` 與 `filter_corpus_by_stage()`，支援 `【】` / `（）` 格式並依期中/期末嚴格切片隔離語料庫與生字表（期中絕不混用未來課次）。
     - **題幹字級超綱攔截 & 教學重點檢核**：針對所有試題大題題幹逐字比對本階段課習語料庫，精準攔截未教過字詞（如「陰霾」的「霾」）；並自動核對「改錯字」等大題是否符合本階段習作教學重點。修正 [`scripts/sync_curriculum_progress.py`](./scripts/sync_curriculum_progress.py) 期末真實課名（L07~L12）。
