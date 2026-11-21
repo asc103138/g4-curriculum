@@ -1,0 +1,54 @@
+{
+  "school_year": "115",
+  "grade": "四年級",
+  "semester": "上學期",
+  "ego_browser_bin": "ego-browser",
+  "auth_policy": "ego_lite_persistent_profile",
+  "notes": "所有登入狀態由 Ego Lite 瀏覽器持久 Profile 保存，登入一次即免重複登入。portal_url 指向各出版社真正下載課本/習作 PDF 之備課資源頁面。如需覆蓋個人網址，請建立 config/ebook_sources.local.json（已由 .gitignore 隔離）。",
+  "subjects": {
+    "chinese": {
+      "name": "國語科（翰林版）",
+      "publisher": "翰林",
+      "portal_url": "https://edisc3.hle.com.tw/edisc_v3/gwty_v2023.html#degree=%E5%9C%8B%E5%B0%8F&cat=%E5%9C%8B%E8%AA%9E&prd=ECH&year=115%E4%B8%8A&grade=%E5%9B%9B%E5%B9%B4%E7%B4%9A&code1=ECH5",
+      "ebook_reader_url": "https://edisc3.hle.com.tw/edisc_v3/ebook_v2023.html#degree=%E5%9C%8B%E5%B0%8F&cat=%E5%9C%8B%E8%AA%9E&prd=ECH&year=115%E4%B8%8A&grade=%E5%9B%9B%E5%B9%B4%E7%B4%9A&code1=ebook",
+      "login_indicators": ["初次見面", "請先選擇學制", "會員登入", "請登入"],
+      "logged_in_indicators": ["課本PDF", "習作PDF", "備課教材", "我的教材", "登出"],
+      "local_dir": "115四上國課習",
+      "download_keywords": ["課本PDF", "習作PDF", "國語", "四年級", "4上"],
+      "stage_keywords": {
+        "midterm": ["L01", "L02", "L03", "L04", "L05", "L06", "統整一", "統整二"],
+        "final": ["L07", "L08", "L09", "L10", "L11", "L12", "統整三", "統整四"]
+      }
+    },
+    "math": {
+      "name": "數學科（南一版）",
+      "publisher": "南一",
+      "portal_url": "https://box3.nani.com.tw/resource",
+      "ebook_reader_url": "https://reader.nani.com.tw/bookshelf",
+      "fallback_urls": ["https://nanidigi.nani.com.tw/"],
+      "login_indicators": ["會員登入", "請輸入您的帳號及密碼"],
+      "logged_in_indicators": ["登出", "NaniBox", "學制", "年級（冊次）"],
+      "local_dir": "115四上數課習",
+      "download_keywords": ["課本PDF", "習作PDF", "數學", "四年級", "4上"],
+      "stage_keywords": {
+        "midterm": ["ch01", "ch02", "ch03", "ch04", "ch05", "加油小站1"],
+        "final": ["ch06", "ch07", "ch08", "ch09", "ch10", "加油小站2"]
+      }
+    },
+    "social": {
+      "name": "社會科（康軒版）",
+      "publisher": "康軒",
+      "portal_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=un&grade=4&item=teach&bookcase=online",
+      "ebook_reader_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=un&grade=4&item=ebook&bookcase=online",
+      "fallback_urls": ["https://945cloud.knsh.com.tw/"],
+      "login_indicators": ["會員登入", "請先登入"],
+      "logged_in_indicators": ["我的書櫃", "搜尋資源", "教學資源", "載即便"],
+      "local_dir": "115社會課習",
+      "download_keywords": ["社會4上課本", "社會4上習作", "社會", "四年級", "4上"],
+      "stage_keywords": {
+        "midterm": ["1-1", "1-2", "1-3", "2-1", "2-2"],
+        "final": ["3-1", "3-2", "4-1", "4-2", "4-3"]
+      }
+    }
+  }
+}

@@ -160,9 +160,12 @@ def check_local_final_coverage() -> Dict[str, Dict[str, bool]]:
 
     return status
 
-def search_gdrive_and_sync(stage: str = "final", verbose: bool = True) -> Dict[str, List[str]]:
+def search_gdrive_and_sync(stage: str = "final", verbose: bool = True, allow_ego_fallback: bool = False) -> Dict[str, List[str]]:
     """
-    搜尋 Google Drive 與本機目錄，若缺少指定階段的教材，自動同步並解壓縮
+    三層教材自動補齊漏斗：
+    1. 檢查本地教材目錄覆蓋率
+    2. 搜尋 Google Drive 與本機路徑自動解壓縮同步
+    3. 若 allow_ego_fallback=True 且雲端亦缺漏，自動調用 Ego Lite 電子書平台免重複登入即時抓取
     """
     synced_items = {"chinese": [], "math": [], "social": []}
     coverage = check_local_final_coverage()
@@ -227,8 +230,20 @@ def search_gdrive_and_sync(stage: str = "final", verbose: bool = True) -> Dict[s
             if items:
                 print(f"📦 【{subj}】成功由雲端同步 {len(items)} 個檔案！")
             else:
-                if (subj == "chinese" and need_chinese) or (subj == "math" and need_math) or (subj == "social" and need_social):
-                    print(f"⚠️ 【{subj}】未於雲端硬碟找到【{stage}】教材，請確認雲端硬碟掛載或校內資源下載。")
+                still_missing = (subj == "chinese" and need_chinese) or (subj == "math" and need_math) or (subj == "social" and need_social)
+                if still_missing:
+                    if allow_ego_fallback:
+                        print(f"🌐 【{subj}】本地與雲端皆缺【{stage}】教材，啟動第 3 層備援：Ego Lite 電子書自動登入抓取...")
+                        try:
+                            from ego_ebook_fetcher import load_ebook_config, check_or_fetch_subject
+                            ego_cfg = load_ebook_config()
+                            res = check_or_fetch_subject(subj, ego_cfg, stage=stage, check_only=False)
+                            if res.get("status") == "DOWNLOADED":
+                                synced_items[subj].extend([Path(d["file"]).name for d in res.get("downloaded", [])])
+                        except Exception as e:
+                            print(f"⚠️ 【{subj}】Ego Lite 電子書抓取失敗：{e}")
+                    else:
+                        print(f"⚠️ 【{subj}】未於雲端硬碟找到【{stage}】教材，可加上 `--fetch-ebook` 透過 Ego Lite 自動登入電子書抓取。")
 
     # 若有新同步檔案，清除語料快取以促使重新建構
     total_synced = sum(len(v) for v in synced_items.values())
@@ -312,9 +327,10 @@ def detect_content_progress_alignment(content: str, subject_key: str, active_sta
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser(description="進度感知與教材動態擴展模組")
+    parser = argparse.ArgumentParser(description="進度感知與教材動態擴展模組（支援 Google Drive + Ego Lite 電子書自動補齊）")
     parser.add_argument("--stage", choices=["midterm", "final", "auto"], default="auto", help="指定進度階段 (預設 auto)")
     parser.add_argument("--sync", action="store_true", help="強制執行雲端與本地同步")
+    parser.add_argument("--fetch-ebook", action="store_true", help="若本地與雲端皆缺少當前進度教材，自動透過 Ego Lite 登入各科電子書即時抓取")
     args = parser.parse_args()
 
     stage, desc = detect_semester_stage()
@@ -328,5 +344,5 @@ if __name__ == "__main__":
     for subj, cov in coverage.items():
         print(f"  - {subj}: 期中={cov['has_midterm']}, 期末={cov['has_final']}")
 
-    if args.sync or stage == "final":
-        synced = search_gdrive_and_sync(stage=stage, verbose=True)
+    if args.sync or args.fetch_ebook or stage == "final":
+        synced = search_gdrive_and_sync(stage=stage, verbose=True, allow_ego_fallback=args.fetch_ebook)

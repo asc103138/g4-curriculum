@@ -1,8 +1,13 @@
 # 交接與進度記錄 (handoff.md)
 
 ## 專案狀態
-- **日期**：2026-11-16
+- **日期**：2026-11-21
 - **目前進度**：
+  - **完成 Ego Lite 自動進度教科書抓取與免重複登入機制 (v4.3)**：
+    - 建立電子書與備課下載入口設定檔 [`config/ebook_sources.json`](./config/ebook_sources.json)（不含任何帳密，支援 `*.local.json` 本機覆蓋並由 `.gitignore` 隔離），直達三家出版社真正下載課本／習作 PDF 之備課資源頁面（翰林行動大師 3 教材資源、南一 NaniBox 3.0、康軒數位高手教學資源）。
+    - 開發 [`scripts/ego_ebook_fetcher.py`](./scripts/ego_ebook_fetcher.py)：透過 Ego Lite (`ego-browser nodejs`) 持久瀏覽器 Profile 保存登入 Session，達成登入一次即免重複登入；支援自動進度 PDF 抓取、`--download-url` 通用受保護檔案下載、`--check-auth` 登入狀態驗證與 `--ingest-downloads` Downloads 自動歸檔解壓。
+    - 升級 [`scripts/sync_curriculum_progress.py`](./scripts/sync_curriculum_progress.py) 與 [`scripts/check_curriculum.py`](./scripts/check_curriculum.py) 加入 `--fetch-ebook` 參數，形成三層自動補齊漏斗（本地目錄 → Google Drive → Ego Lite 電子書平台）。
+    - 已實測完成三科（翰林國語、南一數學、康軒社會）一次性登入並驗證重開分頁仍維持免重複登入 Session，同步更新 [`AGENTS.md`](./AGENTS.md) 與全域技能 `g4-curriculum-review`。
   - **鎖定第二次定期評量（期末考）考核單元**：
     - 數學科（南一版四上）：第 6～10 單元（分數、數量關係、整數四則、小數、長度公里）。
     - 社會科（康軒版四上）：第 3～4 單元（家鄉的傳統信仰與老街、家鄉的作息節慶與節日）。

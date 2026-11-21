@@ -13,6 +13,7 @@ Thumbs.db
 # Temp & Secrets
 .env
 .env.local
+*.local.json
 .gemini/
 scratch/
 

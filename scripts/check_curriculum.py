@@ -937,6 +937,7 @@ def main():
     parser.add_argument("--output-dir", default="reviewed", help="審查結果存放目錄 (預設: reviewed)")
     parser.add_argument("--stage", choices=["auto", "midterm", "final"], default="auto", help="指定教學階段 (預設 auto 自動感知)")
     parser.add_argument("--sync", action="store_true", help="強制自動搜尋 Google Drive / 本地擴展教材")
+    parser.add_argument("--fetch-ebook", action="store_true", help="本地與雲端皆缺教材時，透過 Ego Lite 免重複登入各科電子書即時抓取")
     parser.add_argument("--rebuild-cache", action="store_true", help="強制重新提取並建立課本語料快取")
     parser.add_argument("--check-term", help="快速查詢某詞彙是否存在於真實課本習作中")
     parser.add_argument("--subject", choices=["chinese", "math", "social"], default="chinese", help="查詢時指定科目 (預設: chinese)")
@@ -947,9 +948,9 @@ def main():
         curr_stage, stage_desc = detect_semester_stage()
         effective_stage = curr_stage if args.stage == "auto" else args.stage
         print(f"📅 學期進度階段：{stage_desc}")
-        # 若為期末階段且缺少教材，自動自雲端硬碟同步
-        if args.sync or effective_stage == "final":
-            search_gdrive_and_sync(stage=effective_stage, verbose=True)
+        # 若為期末階段且缺少教材，自動自雲端硬碟同步（必要時啟用 Ego Lite 備援）
+        if args.sync or args.fetch_ebook or effective_stage == "final":
+            search_gdrive_and_sync(stage=effective_stage, verbose=True, allow_ego_fallback=args.fetch_ebook)
 
     corpus = load_or_build_corpus(force_rebuild=args.rebuild_cache)
     lexicon = load_lexicon_data()
