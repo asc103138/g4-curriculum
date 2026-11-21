@@ -36,19 +36,19 @@ CONFIG = {
     "subjects": {
         "math": {
             "name": "數學科（南一版）",
-            "dirs": ["115四上數課習", r"D:\115四年級複習卷\數學"],
+            "dirs": ["115四上數課習", "115四上期末數學課習", r"D:\115四年級複習卷\數學"],
             "keywords": ["南一", "分數", "大數", "角度", "公里", "乘法", "除法", "等值", "三角形", "n-Ⅱ-", "s-Ⅱ-", "數學"],
             "misconceptions": ["M4-FRAC-01", "M4-PLACE-01", "M4-GEOM-01", "M4-GEOM-02", "M4-CALC-01"]
         },
         "chinese": {
             "name": "國語科（翰林版）",
-            "dirs": ["115四上國課習", r"D:\opencode\115四上期中國語\115四上國課習", r"D:\opencode\115四上期中國語"],
+            "dirs": ["115四上國課習", "115四上期末國語課習", r"D:\opencode\115四上期中國語\115四上國課習", r"D:\opencode\115四上期中國語"],
             "keywords": ["翰林", "記敘文", "說明文", "五感", "修辭", "句型", "作文", "6-Ⅱ-", "5-Ⅱ-", "國語"],
             "misconceptions": ["C4-TEXT-01", "C4-PUNCT-01", "C4-STRUC-01", "C4-VOCAB-01"]
         },
         "social": {
             "name": "社會科（康軒版）",
-            "dirs": ["115社會課習", r"D:\115四年級複習卷\社會", r"D:\antui\html簡報\115四上社會_1-2地形的種類與生活"],
+            "dirs": ["115社會課習", "115四上期末社會課習", r"D:\115四年級複習卷\社會", r"D:\antui\html簡報\115四上社會_1-2地形的種類與生活"],
             "keywords": ["康軒", "家鄉", "地形", "產業", "港區", "水資源", "公共設施", "社2a-Ⅱ-", "地1b-Ⅱ-", "社會"],
             "misconceptions": ["S4-GEO-01", "S4-ECON-01", "S4-CIVIC-01", "S4-LOCAL-01"]
         }
@@ -189,14 +189,18 @@ def filter_corpus_by_stage(subj_corpus: dict, subject_key: str, active_stage: st
     return filtered if filtered else subj_corpus
 
 def get_stage_characters(lexicon: dict, subject_key: str, active_stage: str) -> set:
-    """取得對應階段之正式課本生字表"""
+    """取得對應階段之正式課本生字表（期中鎖定 L01~L06；期末鎖定 L07~L12）"""
     subj_lex = lexicon.get(subject_key, {})
     units = subj_lex.get("units", {})
-    if active_stage == "midterm" and units:
-        mid_keys = {"L01", "L02", "L03", "L04", "L05", "L06", "統整一", "統整二"}
+    if units and active_stage in ("midterm", "final"):
+        stage_keys = (
+            {"L01", "L02", "L03", "L04", "L05", "L06", "統整一", "統整二"}
+            if active_stage == "midterm"
+            else {"L07", "L08", "L09", "統整三", "L10", "L11", "L12", "統整四"}
+        )
         chars = set()
         for k, info in units.items():
-            if k in mid_keys:
+            if k in stage_keys:
                 chars.update(info.get("characters", []))
         if chars:
             return chars

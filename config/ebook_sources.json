@@ -38,8 +38,8 @@
     "social": {
       "name": "社會科（康軒版）",
       "publisher": "康軒",
-      "portal_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=un&grade=4&item=teach&bookcase=online",
-      "ebook_reader_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=un&grade=4&item=ebook&bookcase=online",
+      "portal_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=so&grade=4&item=teach&bookcase=online",
+      "ebook_reader_url": "https://digitalmaster.knsh.com.tw/v3/pages/e/index.html#year=1151&field=so&grade=4&item=ebook&bookcase=online",
       "fallback_urls": ["https://945cloud.knsh.com.tw/"],
       "login_indicators": ["會員登入", "請先登入"],
       "logged_in_indicators": ["我的書櫃", "搜尋資源", "教學資源", "載即便"],

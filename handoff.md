@@ -3,6 +3,11 @@
 ## 專案狀態
 - **日期**：2026-11-21
 - **目前進度**：
+  - **完成四上期末全科課習 PDF 官網實測下載、對稱資料夾建置與 L07～L12 官方生字真理辭典補齊 (v4.4)**：
+    - 透過 Ego Lite 直接從三家出版社官方備課網站下載四上期末全部課本與習作 PDF（共 41 份：翰林國語課本 10 份＋習作 9 份、南一數學課本 6 份＋習作 6 份、康軒社會課本 5 份＋習作 5 份），比照期中考結構建立對稱本地資料夾（`115四上期末國語課習/`、`115四上期末數學課習/`、`115四上期末社會課習/`，已由 `.gitignore` 嚴格隔離版權原檔）。
+    - 從官方 `20-115國小國語4上課本-生字表.pdf` 轉圖逐字視覺校對（修正 7 處 PDF 字型錯碼），補齊 L07～L12 共 **87 個正式期末生字**、核心詞彙與句型至 [`scripts/build_lexicon.py`](./scripts/build_lexicon.py)，並重新產出 [`references/g4_genuine_textbook_lexicon.json`](./references/g4_genuine_textbook_lexicon.json) 與 [`references/g4_genuine_textbook_lexicon.md`](./references/g4_genuine_textbook_lexicon.md)。
+    - 更新 [`scripts/check_curriculum.py`](./scripts/check_curriculum.py) 納入三個期末資料夾路徑，並升級 `get_stage_characters()` 使 `--stage final` 嚴格鎖定 87 個期末生字表；同步優化 [`config/ebook_sources.json`](./config/ebook_sources.json) 康軒直達連結（`field=so`）。
+    - 於 Ego Lite 設定頁（`chrome://settings/content/automaticDownloads`）將三大出版社與全臺教育網域（`[*.]hle.com.tw`、`[*.]nani.com.tw`、`[*.]oneclass.com.tw`、`[*.]knsh.com.tw`、`[*.]edu.tw`）加入自動下載許可清單，達成批次下載多個 PDF 預設一律允許、免再詢問。
   - **完成 Ego Lite 自動進度教科書抓取與免重複登入機制 (v4.3)**：
     - 建立電子書與備課下載入口設定檔 [`config/ebook_sources.json`](./config/ebook_sources.json)（不含任何帳密，支援 `*.local.json` 本機覆蓋並由 `.gitignore` 隔離），直達三家出版社真正下載課本／習作 PDF 之備課資源頁面（翰林行動大師 3 教材資源、南一 NaniBox 3.0、康軒數位高手教學資源）。
     - 開發 [`scripts/ego_ebook_fetcher.py`](./scripts/ego_ebook_fetcher.py)：透過 Ego Lite (`ego-browser nodejs`) 持久瀏覽器 Profile 保存登入 Session，達成登入一次即免重複登入；支援自動進度 PDF 抓取、`--download-url` 通用受保護檔案下載、`--check-auth` 登入狀態驗證與 `--ingest-downloads` Downloads 自動歸檔解壓。
